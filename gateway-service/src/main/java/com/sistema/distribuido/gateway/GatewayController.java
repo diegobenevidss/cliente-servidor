@@ -16,25 +16,24 @@ public class GatewayController {
         this.electionService = electionService;
     }
 
+    // O Gateway recebe o JSON como uma String pura para evitar dependências de Models
     @PostMapping("/enviar")
-    public ResponseEntity<String> encaminharMensagem(@RequestBody String mensagem) {
+    public ResponseEntity<String> encaminharMensagem(@RequestBody String jsonPayload) {
         String urlLider = electionService.getLiderAtual();
 
         try {
-            // Tenta enviar para o líder atual
-            return restTemplate.postForEntity(urlLider + "/save", mensagem, String.class);
+            System.out.println("Encaminhando para o líder: " + urlLider);
+            return restTemplate.postForEntity(urlLider + "/save", jsonPayload, String.class);
         } catch (Exception e) {
-            System.out.println("Falha ao contactar o líder: " + urlLider);
+            System.out.println("Falha no líder " + urlLider + ". Iniciando failover...");
 
-            // Se falhar, faz uma nova eleição instantânea
-            electionService.realizarEleicao();
+            electionService.realizarEleicao(); // Elege a réplica 1
             String novoLider = electionService.getLiderAtual();
 
             try {
-                // Tenta novamente com o novo líder
-                return restTemplate.postForEntity(novoLider + "/save", mensagem, String.class);
+                return restTemplate.postForEntity(novoLider + "/save", jsonPayload, String.class);
             } catch (Exception ex) {
-                return ResponseEntity.status(503).body("Erro: Sistema indisponível no momento.");
+                return ResponseEntity.status(503).body("Erro Crítico: Nenhum servidor disponível.");
             }
         }
     }

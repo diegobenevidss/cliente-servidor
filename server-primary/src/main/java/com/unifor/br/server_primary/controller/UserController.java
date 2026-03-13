@@ -1,29 +1,33 @@
 package com.unifor.br.server_primary.controller;
 
 import com.unifor.br.server_primary.model.User;
-import com.unifor.br.server_primary.service.UserService;
+import com.unifor.br.server_primary.service.ReplicationService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.util.List;
-
 @RestController
-@RequestMapping("/users")
 public class UserController {
 
-    private final UserService service;
+    private final ReplicationService replicationService;
 
-    public UserController(UserService service) {
-        this.service = service;
+    public UserController(ReplicationService replicationService) {
+        this.replicationService = replicationService;
     }
 
-    @PostMapping
-    public User create(@RequestBody User user) throws IOException {
-        return service.save(user);
+    // Recebe do Gateway
+    @PostMapping("/save")
+    public ResponseEntity<String> save(@RequestBody User user) {
+        try {
+            replicationService.salvarEReplicar(user);
+            return ResponseEntity.ok("Dado salvo no Primário e replicado!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erro interno no servidor líder.");
+        }
     }
 
-    @GetMapping
-    public List<User> list() throws IOException {
-        return service.findAll();
+    // Usado pelo Gateway para saber se este servidor está vivo
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
     }
 }
