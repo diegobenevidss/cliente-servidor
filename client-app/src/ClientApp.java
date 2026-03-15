@@ -6,6 +6,7 @@ import java.util.Scanner;
 
 public class ClientApp {
 
+    // Se o seu Gateway estiver mapeado para /save em vez de /enviar, mude a rota aqui!
     private static final String GATEWAY_URL = "http://localhost:8000/enviar";
 
     public static void main(String[] args) {
@@ -16,17 +17,17 @@ public class ClientApp {
         System.out.println("   CLIENTE - SISTEMA DISTRIBUÍDO (H2)    ");
         System.out.println("==========================================");
 
-        System.out.print("Digite o seu nome de usuário: ");
-        String nome = scanner.nextLine();
+        System.out.print("Digite o seu NOME: ");
+        String name = scanner.nextLine();
 
         while (true) {
-            System.out.print("\nSua mensagem > ");
-            String mensagem = scanner.nextLine();
+            System.out.print("\nDigite o EMAIL (ou 'sair' para encerrar) > ");
+            String email = scanner.nextLine();
 
-            if (mensagem.equalsIgnoreCase("sair")) break;
+            if (email.equalsIgnoreCase("sair")) break;
 
-            // Monta o JSON manualmente no formato da classe User
-            String jsonPayload = String.format("{\"nome\": \"%s\", \"mensagem\": \"%s\"}", nome, mensagem);
+            // Monta o JSON com os campos idênticos à classe User
+            String jsonPayload = String.format("{\"name\": \"%s\", \"email\": \"%s\"}", name, email);
 
             try {
                 HttpRequest request = HttpRequest.newBuilder()
