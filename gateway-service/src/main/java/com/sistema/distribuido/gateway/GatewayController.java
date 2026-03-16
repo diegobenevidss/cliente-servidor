@@ -23,15 +23,18 @@ public class GatewayController {
     public ResponseEntity<String> encaminharMensagem(@RequestBody String jsonPayload) {
         String urlLider = electionService.getLiderAtual();
 
-        // 👇 O SEGREDO ESTÁ AQUI: Criamos a "etiqueta" avisando que é um JSON
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> requestEntity = new HttpEntity<>(jsonPayload, headers);
 
         try {
-            System.out.println("Encaminhando para o líder: " + urlLider);
-            // Repassamos a requestEntity (que tem o texto + a etiqueta JSON)
-            return restTemplate.postForEntity(urlLider + "/save", requestEntity, String.class);
+            // Tenta mandar pro Primário (na rota /save)
+            if (urlLider.contains("8080")) {
+                return restTemplate.postForEntity(urlLider + "/save", requestEntity, String.class);
+            } else {
+                // Se o líder for a Réplica (8081), manda na rota /replicate dela
+                return restTemplate.postForEntity(urlLider + "/replicate", requestEntity, String.class);
+            }
         } catch (Exception e) {
             System.out.println("Falha no líder " + urlLider + ". Motivo: " + e.getMessage());
             System.out.println("Iniciando failover...");
@@ -40,7 +43,8 @@ public class GatewayController {
             String novoLider = electionService.getLiderAtual();
 
             try {
-                return restTemplate.postForEntity(novoLider + "/save", requestEntity, String.class);
+                // Dispara para a nova líder eleita
+                return restTemplate.postForEntity(novoLider + "/replicate", requestEntity, String.class);
             } catch (Exception ex) {
                 return ResponseEntity.status(503).body("Erro Crítico: Nenhum servidor disponível.");
             }

@@ -6,7 +6,6 @@ import java.util.Scanner;
 
 public class ClientApp {
 
-    // Se o seu Gateway estiver mapeado para /save em vez de /enviar, mude a rota aqui!
     private static final String GATEWAY_URL = "http://localhost:8000/enviar";
 
     public static void main(String[] args) {
@@ -17,16 +16,27 @@ public class ClientApp {
         System.out.println("   CLIENTE - SISTEMA DISTRIBUÍDO (H2)    ");
         System.out.println("==========================================");
 
-        System.out.print("Digite o seu NOME: ");
-        String name = scanner.nextLine();
-
+        // O loop agora começa AQUI, pedindo o nome toda vez!
         while (true) {
-            System.out.print("\nDigite o EMAIL (ou 'sair' para encerrar) > ");
+            System.out.print("\nDigite o NOME (ou 'sair' para encerrar) > ");
+            String name = scanner.nextLine();
+
+            // A condição de saída agora fica no nome
+            if (name.equalsIgnoreCase("sair")) {
+                System.out.println("Encerrando o cliente...");
+                break;
+            }
+
+            System.out.print("Digite o EMAIL > ");
             String email = scanner.nextLine();
 
-            if (email.equalsIgnoreCase("sair")) break;
+            // 🛡️ A trava de segurança contra "dedos gordos"
+            if (!email.contains("@")) {
+                System.out.println("⚠️ E-mail inválido! Um e-mail precisa ter o símbolo '@'. Tente novamente.");
+                continue; // Pula o envio e volta pro começo do loop
+            }
 
-            // Monta o JSON com os campos idênticos à classe User
+            // Monta o JSON
             String jsonPayload = String.format("{\"name\": \"%s\", \"email\": \"%s\"}", name, email);
 
             try {
@@ -44,7 +54,7 @@ public class ClientApp {
                     System.out.println("⚠️ Erro: Status " + response.statusCode());
                 }
             } catch (Exception e) {
-                System.out.println("❌ Erro de Conexão: O Gateway está offline!");
+                System.out.println("❌ Erro de Conexão: O Gateway está offline ou a URL está errada!");
             }
         }
         scanner.close();
