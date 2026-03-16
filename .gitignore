@@ -1,0 +1,12 @@
+build/
+.gradle/
+out/
+
+*.mv.db
+*.trace.db
+
+.idea/
+*.iml
+.vscode/
+
+*.class
